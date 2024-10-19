@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Posts</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>All Posts</h1>
+        {% for post in posts %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <span id="username{{ forloop.counter }}">{{ post.user.username }}</span>
+                    </h5>
+                    <p class="card-text">
+                        {{ post.content|truncatechars:100 }}
+                        {% if post.content|length > 100 %}
+                            <a href="#" data-toggle="modal" data-target="#postModal{{ forloop.counter }}">See more</a>
+                        {% endif %}
+                    </p>
+                    <p class="text-muted">{{ post.created_at|date:"Y-m-d" }}</p>
+                    <p>Reports: {{ post.reports.count }}</p> <!-- Display number of reports -->
+                    <button class="btn btn-danger" data-toggle="modal" data-target="#reportModal{{ forloop.counter }}">Report</button>
+                </div>
+            </div>
+
+            <!-- Modal for full content -->
+            {% if post.content|length > 100 %}
+                <div class="modal fade" id="postModal{{ forloop.counter }}" tabindex="-1" role="dialog" aria-labelledby="postModalLabel{{ forloop.counter }}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="postModalLabel{{ forloop.counter }}">Full Post</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                {{ post.content }}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Modal for reporting -->
+            <div class="modal fade" id="reportModal{{ forloop.counter }}" tabindex="-1" role="dialog" aria-labelledby="reportModalLabel{{ forloop.counter }}" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="reportModalLabel{{ forloop.counter }}">Report Post</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form method="POST" action="{% url 'report_post' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="post_id" value="{{ post.id }}">
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="reportMessage{{ forloop.counter }}">Reason for Reporting:</label>
+                                    <textarea class="form-control" id="reportMessage{{ forloop.counter }}" name="message" required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-danger">Report</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p>No posts available.</p>
+        {% endfor %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const usernameElements = document.querySelectorAll("[id^='username']");
+            usernameElements.forEach(element => {
+                const username = element.textContent.trim();
+                element.textContent = truncateUsername(username);
+            });
+        });
+
+        function truncateUsername(username) {
+            if (username.length < 5) {
+                return username;
+            }
+            return username.slice(0, 2) + '***' + username.slice(-2);
+        }
+    </script>
+</body>
+</html>
